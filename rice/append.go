@@ -83,10 +83,21 @@ func operationAppend(pkgs []*build.Package) {
 					fmt.Printf("Error: box \"%s\" not found on disk\n", path)
 					os.Exit(1)
 				}
+
+				isDir := info.IsDir()
+				if (info.Mode() & os.ModeSymlink) != 0 {
+					stat, err := os.Stat(path)
+					if err != nil {
+						fmt.Printf("Error reading the link destination: %s\n", err)
+						os.Exit(1)
+					}
+					isDir = stat.IsDir()
+				}
+
 				// create zipFilename
 				zipFileName := filepath.Join(appendedBoxName, strings.TrimPrefix(path, boxPath))
 				// write directories as empty file with comment "dir"
-				if info.IsDir() {
+				if isDir {
 					_, err := zipWriter.CreateHeader(&zip.FileHeader{
 						Name:    zipFileName,
 						Comment: "dir",
